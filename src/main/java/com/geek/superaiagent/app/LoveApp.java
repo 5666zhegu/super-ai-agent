@@ -2,9 +2,7 @@ package com.geek.superaiagent.app;
 
 import com.geek.superaiagent.advisor.MyLoggerAdvisor;
 import com.geek.superaiagent.advisor.SafeGuardAdvisor;
-import com.geek.superaiagent.chatMemory.FileBaseMemory;
-
-
+import com.geek.superaiagent.chatMemory.MysqlChatMemory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -17,9 +15,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
-
 import static com.geek.superaiagent.constant.SystemConstant.*;
-
 
 @Component
 @Slf4j
@@ -28,17 +24,16 @@ public class LoveApp {
 
     private final ChatClient chatClient;
 
-
     private static final List<String> sensitiveWords = SENSITIVE_WORDS;
     /**
      * 初始化ChatClicent
-     *
      * @param dashscopeChatModel 聊天模型
      */
 
-    public LoveApp(ChatModel dashscopeChatModel, @Value("classpath:SystemPromptTemplate") Resource systemResource) {
-        String Base_dir = System.getProperty("user.dir") + "/tmp/chat-memory";
-        FileBaseMemory chatMemory = new FileBaseMemory(Base_dir);
+    public LoveApp(ChatModel dashscopeChatModel, MysqlChatMemory chatMemory, @Value("classpath:SystemPromptTemplate") Resource systemResource) {
+        // String Base_dir = System.getProperty("user.dir") + "/tmp/chat-memory";
+
+        // FileBaseMemory chatMemory = new FileBaseMemory(Base_dir);
 
         PromptTemplate promptTemplate = new PromptTemplate(systemResource);
         Map<String, Object> params = Map.of("userName", "者古");
@@ -49,8 +44,7 @@ public class LoveApp {
                         new SafeGuardAdvisor(sensitiveWords,FAIL_RESPONSE,0),
                         MessageChatMemoryAdvisor.builder(chatMemory).build(),
                         MyLoggerAdvisor.builder().build()
-//                        new ReReadingAdvisor().withOrder(0)
-
+                        // new ReReadingAdvisor().withOrder(0)
 
                 )
                 .build();
@@ -86,15 +80,7 @@ public class LoveApp {
                 .entity(LoveReport.class);
         return loveReport;
 
-
-
-
     }
 
 
-
-
-
-}
-
-
+    }
