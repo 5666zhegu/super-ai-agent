@@ -6,10 +6,12 @@ import com.geek.superaiagent.chatMemory.MysqlChatMemory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -20,7 +22,9 @@ import static com.geek.superaiagent.constant.SystemConstant.*;
 @Component
 @Slf4j
 public class LoveApp {
+    private final VectorStore LoveApppVectorStore;
 
+    private final Advisor LoveAppRagCloudAdvisor;
 
     private final ChatClient chatClient;
 
@@ -30,7 +34,7 @@ public class LoveApp {
      * @param dashscopeChatModel 聊天模型
      */
 
-    public LoveApp(ChatModel dashscopeChatModel, MysqlChatMemory chatMemory, @Value("classpath:SystemPromptTemplate") Resource systemResource) {
+    public LoveApp(ChatModel dashscopeChatModel, MysqlChatMemory chatMemory, @Value("classpath:SystemPromptTemplate") Resource systemResource, VectorStore LoveApppVectorStore, Advisor LoveAppRagCloudAdvisor) {
         // String Base_dir = System.getProperty("user.dir") + "/tmp/chat-memory";
 
         // FileBaseMemory chatMemory = new FileBaseMemory(Base_dir);
@@ -48,6 +52,11 @@ public class LoveApp {
 
                 )
                 .build();
+        this.LoveApppVectorStore = LoveApppVectorStore;
+        this.LoveAppRagCloudAdvisor = LoveAppRagCloudAdvisor;
+
+
+
     }
 
     /**
@@ -81,6 +90,17 @@ public class LoveApp {
         return loveReport;
 
     }
+    public String doChatWithRag(String conversationId,String message){
 
-
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .advisors(LoveAppRagCloudAdvisor)
+                .call()
+                .chatResponse();
+        String text = chatResponse.getResult().getOutput().getText();
+        return text;
     }
+
+
+}
