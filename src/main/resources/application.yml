@@ -29,7 +29,7 @@ springdoc:
 mybatis-plus:
   configuration:
     # MyBatis 配置
-    map-underscore-to-camel-case: false
+    map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
@@ -40,4 +40,9 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+logging:
+  level:
+    com.geek.superaiagent.advisor.MyLoggerAdvisor: INFO
+    org.apache.ibatis: info
+
 
