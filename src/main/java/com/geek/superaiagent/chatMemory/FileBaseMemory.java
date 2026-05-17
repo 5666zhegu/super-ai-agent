@@ -49,9 +49,7 @@ public class FileBaseMemory implements ChatMemory {
 
     @Override
     public List<Message> get(String conversationId) {
-        List<Message> messages1 = getOrCreateConversation(conversationId);
-        return messages1;
-
+        return getLastNMessage(conversationId,10);
     }
 
     private List<Message> getLastNMessage(String conversationId , int LastN){

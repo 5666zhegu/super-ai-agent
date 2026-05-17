@@ -16,10 +16,15 @@ public class LoveAppVectorStoreConfig {
     @Resource
     private LoveAppDocumentLoader loveAppDocumentLoader;
 
-    @Bean
+    @Resource
+    private MyKeyWordEnricher myKeyWordEnricher;
+
+
+    //    @Bean
     VectorStore LoveApppVectorStore(EmbeddingModel dashscopeEmbeddingModel){
         SimpleVectorStore vectorStore = SimpleVectorStore.builder(dashscopeEmbeddingModel).build();
         List<Document> documents = loveAppDocumentLoader.loadMarkdown();
+        documents = myKeyWordEnricher.enrichDocument(documents);
         vectorStore.doAdd(documents);
         return vectorStore;
     }

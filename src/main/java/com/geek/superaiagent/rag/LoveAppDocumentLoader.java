@@ -2,6 +2,7 @@ package com.geek.superaiagent.rag;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.preretrieval.query.transformation.TranslationQueryTransformer;
 import org.springframework.ai.reader.markdown.MarkdownDocumentReader;
 import org.springframework.ai.reader.markdown.config.MarkdownDocumentReaderConfig;
 import org.springframework.core.io.Resource;
@@ -16,7 +17,9 @@ import java.util.List;
 @Slf4j
 public class LoveAppDocumentLoader {
 
+
     private final ResourcePatternResolver resourcePatternResolver;
+
 
     public LoveAppDocumentLoader(ResourcePatternResolver resourcePatternResolver){
         this.resourcePatternResolver = resourcePatternResolver;
@@ -24,19 +27,23 @@ public class LoveAppDocumentLoader {
 
     public List<Document> loadMarkdown(){
         List<Document> allDocuments = new ArrayList<>();
+
         try {
             Resource[] resources = resourcePatternResolver.getResources("classpath:document/*.md");
             for(Resource resource : resources){
                 String filename = resource.getFilename();
+                String status = filename.substring(filename.length() - 6, filename.length() - 4);
                 MarkdownDocumentReaderConfig config = MarkdownDocumentReaderConfig.builder()
                         .withHorizontalRuleCreateDocument(false)
                         .withIncludeCodeBlock(false)
                         .withIncludeBlockquote(false)
                         .withAdditionalMetadata("filename", filename)
+                        .withAdditionalMetadata("status", status)
                         .build();
-
                 MarkdownDocumentReader reader = new MarkdownDocumentReader(resource, config);
-                allDocuments.addAll(reader.get());
+                List<Document> documents = reader.get();
+                allDocuments.addAll(documents);
+
             }
         } catch (IOException e) {
             log.error("加载文档失败", e);

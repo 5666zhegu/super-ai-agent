@@ -46,6 +46,32 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- iText7 + font-asian（内置华文等 CJK 字体名，无需自带 ttf） -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+            <version>7.2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>7.2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>font-asian</artifactId>
+            <version>7.2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-pgvector-store</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.mysql</groupId>-->
+<!--            <artifactId>mysql-connector-j</artifactId>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
@@ -54,6 +80,11 @@
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-generator</artifactId>
             <version>4.38.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
+            <version>1.1.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
