@@ -1,5 +1,7 @@
 ### CUSTOM ###
 application-local.yml
+tmp
+test
 src/test/
 HELP.md
 target/
