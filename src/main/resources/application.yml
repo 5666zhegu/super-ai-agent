@@ -3,11 +3,29 @@ spring:
     name: super-ai-agent
   profiles:
     active: local
+  # 库连接在 profile 或环境中提供 db.url / db.username / db.password
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
     url: ${db.url}
     username: ${db.username}
     password: ${db.password}
+  ai:
+    dashscope:
+      api-key: ${spring.ai.dashscope.api-key}
+      chat:
+        options:
+          model: qwen-plus
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+        max-document-batch-size: 10000
+        initialize-schema: true
+
+
+
+
 
 
 server:
@@ -44,5 +62,9 @@ logging:
   level:
     com.geek.superaiagent.advisor.MyLoggerAdvisor: INFO
     org.apache.ibatis: info
+
+# SearchAPI.io（百度等引擎），密钥勿提交仓库：可用环境变量 SEARCHAPI_API_KEY
+searchapi:
+  api-key: ${searchapi.api-key}
 
 

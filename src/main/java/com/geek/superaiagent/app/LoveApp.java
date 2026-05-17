@@ -2,7 +2,9 @@ package com.geek.superaiagent.app;
 
 import com.geek.superaiagent.advisor.MyLoggerAdvisor;
 import com.geek.superaiagent.advisor.SafeGuardAdvisor;
-import com.geek.superaiagent.chatMemory.MysqlChatMemory;
+import com.geek.superaiagent.chatMemory.FileBaseMemory;
+import com.geek.superaiagent.rag.LoveAppRagCustomAdvisorFactory;
+//import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -11,6 +13,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -22,9 +25,12 @@ import static com.geek.superaiagent.constant.SystemConstant.*;
 @Component
 @Slf4j
 public class LoveApp {
-    private final VectorStore LoveApppVectorStore;
 
-    private final Advisor LoveAppRagCloudAdvisor;
+    @jakarta.annotation.Resource
+    private VectorStore PgVectorVectorStore;
+
+    @jakarta.annotation.Resource
+    private ToolCallback[] allTool;
 
     private final ChatClient chatClient;
 
@@ -34,15 +40,24 @@ public class LoveApp {
      * @param dashscopeChatModel 聊天模型
      */
 
-    public LoveApp(ChatModel dashscopeChatModel, MysqlChatMemory chatMemory, @Value("classpath:SystemPromptTemplate") Resource systemResource, VectorStore LoveApppVectorStore, Advisor LoveAppRagCloudAdvisor) {
-        // String Base_dir = System.getProperty("user.dir") + "/tmp/chat-memory";
+    public LoveApp(ChatModel dashscopeChatModel,
+                   @Value("classpath:SystemPromptTemplate") Resource systemResource
+                   ) {
 
-        // FileBaseMemory chatMemory = new FileBaseMemory(Base_dir);
+        this.chatClient = createClient(systemResource,dashscopeChatModel);
+
+
+    }
+
+    private ChatClient createClient(Resource systemResource, ChatModel dashscopeChatModel){
+        String Base_dir = System.getProperty("user.dir") + "/tmp/chat-memory";
+        FileBaseMemory chatMemory = new FileBaseMemory(Base_dir);
 
         PromptTemplate promptTemplate = new PromptTemplate(systemResource);
         Map<String, Object> params = Map.of("userName", "者古");
         String systemPrompt = promptTemplate.render(params);
-        chatClient = ChatClient.builder(dashscopeChatModel)
+
+        ChatClient chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(systemPrompt)
                 .defaultAdvisors(
                         new SafeGuardAdvisor(sensitiveWords,FAIL_RESPONSE,0),
@@ -52,11 +67,7 @@ public class LoveApp {
 
                 )
                 .build();
-        this.LoveApppVectorStore = LoveApppVectorStore;
-        this.LoveAppRagCloudAdvisor = LoveAppRagCloudAdvisor;
-
-
-
+        return chatClient;
     }
 
     /**
@@ -90,12 +101,26 @@ public class LoveApp {
         return loveReport;
 
     }
+
     public String doChatWithRag(String conversationId,String message){
 
         ChatResponse chatResponse = chatClient.prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .advisors(LoveAppRagCloudAdvisor)
+                .advisors(LoveAppRagCustomAdvisorFactory.createCustomAdvisor(PgVectorVectorStore,"单身"))
+                .call()
+                .chatResponse();
+        String text = chatResponse.getResult().getOutput().getText();
+        return text;
+    }
+
+
+    public String doChatWithTool(String conversationId,String message){
+
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .toolCallbacks(allTool)
                 .call()
                 .chatResponse();
         String text = chatResponse.getResult().getOutput().getText();
