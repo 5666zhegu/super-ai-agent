@@ -4,7 +4,6 @@ import com.geek.superaiagent.advisor.MyLoggerAdvisor;
 import com.geek.superaiagent.advisor.SafeGuardAdvisor;
 import com.geek.superaiagent.chatMemory.FileBaseMemory;
 import com.geek.superaiagent.rag.LoveAppRagCustomAdvisorFactory;
-//import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -13,8 +12,10 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -26,11 +27,14 @@ import static com.geek.superaiagent.constant.SystemConstant.*;
 @Slf4j
 public class LoveApp {
 
-    @jakarta.annotation.Resource
+    @Autowired
     private VectorStore PgVectorVectorStore;
 
-    @jakarta.annotation.Resource
+    @Autowired
     private ToolCallback[] allTool;
+
+    @Autowired(required = false)
+    private SyncMcpToolCallbackProvider toolCallbackProvider;
 
     private final ChatClient chatClient;
 
@@ -121,6 +125,30 @@ public class LoveApp {
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .toolCallbacks(allTool)
+                .call()
+                .chatResponse();
+        String text = chatResponse.getResult().getOutput().getText();
+        return text;
+    }
+
+    public String doChatWithMcp(String conversationId,String message){
+
+        if (toolCallbackProvider == null) {
+            String errorMsg = "MCP ToolCallbackProvider is null — MCP client auto-configuration did not create the bean. Check: 1) spring-ai-starter-mcp-client is on classpath, 2) spring.ai.mcp.client.enabled=true, 3) spring.ai.mcp.client.type=SYNC, 4) mcp-servers.json is valid, 5) npx/npm and node are installed and accessible.";
+            log.error(errorMsg);
+            return errorMsg;
+        }
+
+        // 诊断：打印 MCP 提供的工具列表
+        var mcpTools = toolCallbackProvider.getToolCallbacks();
+        log.info("MCP ToolCallbackProvider tools count: {}", mcpTools.length);
+        for (var tool : mcpTools) {
+            log.info("MCP tool: {}", tool.getToolDefinition().name());
+        }
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .toolCallbacks(toolCallbackProvider)
                 .call()
                 .chatResponse();
         String text = chatResponse.getResult().getOutput().getText();

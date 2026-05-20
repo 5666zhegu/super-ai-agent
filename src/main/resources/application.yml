@@ -22,6 +22,23 @@ spring:
         dimensions: 1536
         max-document-batch-size: 10000
         initialize-schema: true
+    mcp:
+      client:
+        enabled: true
+        type: SYNC
+        request-timeout: 100s
+        toolcallback:
+          enabled: true
+#        sse:
+#          connections:
+#            server1:
+#              url: http://localhost:8127
+#        name: image-search-mcp-server
+        stdio:
+          servers-configuration: classpath:mcp-servers.json
+
+
+
 
 
 
